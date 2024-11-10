@@ -22,15 +22,23 @@ public class StoreService {
     public int calculateTotal(List<Product> products, boolean applyMembershipDiscount) {
         int total = products.stream().mapToInt(p -> p.getPrice() * p.getQuantity()).sum();
         int promotionDiscount = applyPromotionDiscount(products);
-        int membershipDiscount = applyMembershipDiscount ? calculateMembershipDiscount(total - promotionDiscount) : 0;
-
-        return total - promotionDiscount - membershipDiscount;
+        int membershipDiscount;
+        if (applyMembershipDiscount) {
+            membershipDiscount = calculateMembershipDiscount(total - promotionDiscount);
+        } else {
+            membershipDiscount = 0;
+        }
+        finalAmount = total - promotionDiscount - membershipDiscount;
+        return finalAmount;
     }
 
     private int applyPromotionDiscount(List<Product> products) {
         int discount = 0;
-        // 프로모션 로직 구현
         for (Product product : products) {
+            if (product.getPromotion() == null) {
+                continue; // 프로모션이 없는 경우 처리하지 않음
+            }
+
             for (Promotion promotion : promotions) {
                 if (promotion.isActive(localDate) && product.getPromotion().equals(promotion.getName())) {
                     int freeItems = (product.getQuantity() / (promotion.getBuyQuantity() + promotion.getGetQuantity())) * promotion.getGetQuantity();
